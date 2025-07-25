@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Intelligence System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .mode-selector {
+            margin-bottom: 30px;
+        }
+        
+        .mode-selector h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .mode-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .mode-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .mode-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .mode-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .mode-option h4 {
+            margin-bottom: 5px;
+        }
+        
+        .mode-option p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .persona-fields {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        
+        .persona-fields.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .file-upload {
+            margin: 30px 0;
+            padding: 40px 20px;
+            border: 3px dashed #e1e8ed;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .file-upload.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .download-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PDF Intelligence System</h1>
+            <p>Advanced document analysis with structure extraction and persona-driven insights</p>
+        </div>
+        
+        <div class="content">
+            <div class="mode-selector">
+                <h3>Choose Processing Mode</h3>
+                <div class="mode-options">
+                    <div class="mode-option active" data-mode="structure">
+                        <h4>Structure Extraction</h4>
+                        <p>Extract headings and document outline</p>
+                    </div>
+                    <div class="mode-option" data-mode="persona">
+                        <h4>Persona Analysis</h4>
+                        <p>Analyze relevance for specific user personas</p>
+                    </div>
+                </div>
+                
+                <div class="persona-fields" id="personaFields">
+                    <div class="form-group">
+                        <label for="persona">User Persona</label>
+                        <input type="text" id="persona" placeholder="e.g., Software Engineer at a Tech Startup">
+                    </div>
+                    <div class="form-group">
+                        <label for="jobDescription">Job Description / Goal</label>
+                        <textarea id="jobDescription" rows="3" placeholder="e.g., Build a scalable PDF processing system for document analysis"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="file-upload" id="fileUpload">
+                <div class="upload-icon">📄</div>
+                <h3>Upload PDF Files</h3>
+                <p>Click to select files or drag and drop</p>
+                <input type="file" id="fileInput" multiple accept=".pdf">
+            </div>
+            
+            <button class="btn" id="processBtn" disabled>Process Documents</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your documents...</p>
+            </div>
+            
+            <div class="error" id="error"></div>
+            <div class="success" id="success"></div>
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let currentMode = 'structure';
+        
+        // Mode selection
+        document.querySelectorAll('.mode-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                currentMode = option.dataset.mode;
+                
+                const personaFields = document.getElementById('personaFields');
+                if (currentMode === 'persona') {
+                    personaFields.classList.add('active');
+                } else {
+                    personaFields.classList.remove('active');
+                }
+            });
+        });
+        
+        // File upload handling
+        const fileUpload = document.getElementById('fileUpload');
+        const fileInput = document.getElementById('fileInput');
+        const processBtn = document.getElementById('processBtn');
+        
+        fileUpload.addEventListener('click', () => fileInput.click());
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+            
+            if (selectedFiles.length > 0) {
+                fileUpload.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <h3>${selectedFiles.length} PDF file(s) selected</h3>
+                    <p>${selectedFiles.map(f => f.name).join(', ')}</p>
+                `;
+                processBtn.disabled = false;
+            } else {
+                showError('Please select valid PDF files');
+            }
+        }
+        
+        // Process documents
+        processBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+            
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files[]', file);
+            });
+            formData.append('mode', currentMode);
+            
+            if (currentMode === 'persona') {
+                const persona = document.getElementById('persona').value;
+                const jobDescription = document.getElementById('jobDescription').value;
+                
+                if (!persona || !jobDescription) {
+                    showError('Please fill in both persona and job description');
+                    return;
+                }
+                
+                formData.append('persona', persona);
+                formData.append('job_description', jobDescription);
+            }
+            
+            showLoading(true);
+            hideMessages();
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResults(data);
+                    showSuccess('Documents processed successfully!');
+                } else {
+                    showError(data.error || 'Processing failed');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            processBtn.disabled = show;
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        function showSuccess(message) {
+            const successEl = document.getElementById('success');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+        
+        function hideMessages() {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+        
+        function showResults(data) {
+            const resultsEl = document.getElementById('results');
+            let html = '<h3>Processing Results</h3>';
+            
+            data.results.forEach(result => {
+                html += '<div class="result-item">';
+                if (data.processing_mode === 'structure') {
+                    html += `
+                        <h4>${result.filename}</h4>
+                        <p><strong>Title:</strong> ${result.title}</p>
+                        <p><strong>Sections:</strong> ${result.sections}</p>
+                        <p><strong>Processing Time:</strong> ${result.processing_time}</p>
+                        <a href="/download/${result.output_file}" class="download-link">Download Results</a>
+                    `;
+                } else {
+                    html += `
+                        <h4>Persona Analysis</h4>
+                        <p><strong>Documents Processed:</strong> ${result.documents_processed}</p>
+                        <p><strong>Relevant Sections Found:</strong> ${result.relevant_sections}</p>
+                        <p><strong>Processing Time:</strong> ${result.processing_time}</p>
+                        <a href="/download/${result.output_file}" class="download-link">Download Results</a>
+                    `;
+                }
+                html += '</div>';
+            });
+            
+            resultsEl.innerHTML = html;
+            resultsEl.classList.add('show');
+        }
+    </script>
+</body>
+</html>
