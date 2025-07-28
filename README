@@ -1,0 +1,53 @@
+# PDF Reader: Approach Explanation
+
+## Overview
+
+The PDF Reader project is designed to analyze a collection of related PDF documents based on a user-defined persona and a specific job-to-be-done. The solution is generic and flexible, enabling teams to process documents from any domain and adapt to a wide variety of personas and tasks. This document explains the methodology and design choices behind the system.
+
+## Methodology
+
+### 1. Document Collection
+
+The system expects the user to provide a set of 3–10 related PDF files in the input directory. This range ensures enough diversity and context for meaningful analysis while keeping processing efficient. The documents can be from any domain, such as research papers, textbooks, financial reports, or news articles. The code is domain-agnostic and does not impose any restrictions on the content or structure of the PDFs.
+
+### 2. Persona and Job-to-be-Done
+
+The user defines a persona (role, expertise, focus areas) and a job-to-be-done (concrete task or information need) via a configuration file (persona_config.json) or interactive input. This allows the system to tailor its analysis to the specific requirements and context of the user. The persona can be anything from a researcher to a student, journalist, or entrepreneur, and the job-to-be-done can range from summarizing literature to extracting financial insights or identifying study topics.
+
+### 3. Document Processing
+
+Each PDF is processed using a combination of custom and third-party tools:
+- *PDFProcessor* loads and extracts text from each document.
+- *StructureExtractor* identifies sections and headings using formatting cues and regular expressions.
+- The system enriches each section with its content, page number, and context.
+
+### 4. Semantic Relevance Matching
+
+To identify the most relevant sections for the persona and job-to-be-done, the system uses semantic embeddings:
+- The query (persona + job-to-be-done) and each section are encoded using the SentenceTransformer model (paraphrase-MiniLM-L6-v2).
+- Cosine similarity is computed between the query and each section.
+- Sections with the highest relevance scores are selected (top 5 by default).
+
+This approach ensures that the analysis is not limited to keyword matching but leverages semantic understanding, making it robust across domains and document styles.
+
+### 5. Output Generation
+
+The results are compiled into a structured JSON file containing:
+- Metadata (input documents, persona, job-to-be-done, timestamp)
+- Extracted relevant sections with importance ranking
+- Refined content for each section
+
+This output can be used for further review, reporting, or integration into other workflows.
+
+## Generalization and Extensibility
+
+The solution is designed to be generic:
+- It works with any set of PDFs, regardless of domain or formatting.
+- The persona and job-to-be-done are user-defined, allowing for diverse use cases.
+- The semantic matching approach adapts to different information needs and document types.
+
+Teams can extend the system by adding new processing modules, supporting additional document formats, or integrating with other data sources.
+
+## Conclusion
+
+The PDF Reader provides a flexible, domain-agnostic framework for extracting actionable insights from document collections, tailored to specific personas and tasks. Its methodology combines robust text extraction, structural analysis, and semantic relevance matching to deliver meaningful results for a wide
